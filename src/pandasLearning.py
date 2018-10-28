@@ -96,6 +96,19 @@ print(copy_df)
 df['Location'] = None
 print(df)
 
+# 向DataFrame中添加一行,并增加name作为第二个索引
+df = df.set_index([df.index, 'Name'])
+df.index.names = ['Location', 'Name']
+df = df.append(pd.Series(data={'Cost': 3.00, 'Item Purchased': 'Kitty Food'}, name=('Store 2', 'Kevyn')))
+print(df)
+#               Cost Item Purchased
+#Location Name
+#Store 1  Chris  22.5       Dog Food
+#         Kevyn   2.5   Kitty Litter
+#Store 2  Vinod   5.0      Bird Seed
+#         Kevyn   3.0     Kitty Food
+
+
 # 通过广播的方式来修改所有的cost值
 df['Cost']=df['Cost']*0.8
 print(df)
@@ -131,6 +144,16 @@ df = pd.read_csv('..\cfg\olympic.csv', encoding='ANSI', index_col=0, skiprows=1)
 #     Argentina(ARG)            24    21    25    28     74            19       0       0       0      0     43      21      25      28              74
 #      Armenia(ARM)              6     2     6     6     14             7       0       0       0      0     13       2       6       6              14
 
+# 夏季金牌罪过的国家
+print("Qutesion1：")
+#.iloc[0].index())
+df['Country'] = df.index
+print((df.sort_values(by=['01 !'], ascending=False)).iloc[0]['Country'])
+
+# 取夏季金牌和冬季金牌之间差最大的国家
+df['Country'] = df.index
+#df['different'] = df['01 !'] - df['01 !.1']
+#df = df.sort_values(by=['different'], ascending=False)
 
 # 当column中有相同的名字时，会在重复的名字后加‘.1’,后缀，如上显示的 01!.01  01!.02。 我们可以通过Pandas来修改
 # Pandas把所有的column的名字保存在 .columns属性中
@@ -179,5 +202,173 @@ for col in df.columns:
 # 布尔屏蔽 可以是一维的series，也可以是二维的dataFrame，里面的值都是True或者False，用来覆盖在我们查询的数据解构上
 # 任何对应True的元素都会进入到我们的结果里， False的则不会
 # 这个强大的功能，应用极广，比如图像
-df = pd.read_csv('..\cfg\olympic.csv', encoding='ANSI')
-#print(df.head())
+#df = pd.read_csv('..\cfg\olympic.csv', encoding='ANSI')
+
+# 我们想要取得在夏季奥运会上获得金牌的国家
+# 教程上直接 df['Gold'] > 0, 但编译器提示int不能和str比较，所以就
+a = df['Gold'] > str(0)
+#print(a)
+# Afghanistan(AFG)                      False
+# Algeria(ALG)                           True
+# Argentina(ARG)                         True
+# Armenia(ARM)                           True
+# Australasia(ANZ) [ANZ]                 True
+
+# 把where函数把布尔屏蔽作为条件，将其应用到DataFrame或Series
+# 并返回一个相同形状的新的DataFrame或Series
+# 没有得过金牌的国家里面的数据就是NaN，
+only_Gold = df.where(df['Gold']>str(0))
+print('only Gold country:\n')
+print(only_Gold.head())
+
+#                        Summer Games Gold Silver Bronze Total  Winter Games  \
+# Afghanistan(AFG)                 NaN  NaN    NaN    NaN   NaN           NaN
+# Algeria(ALG)                    13.0    5      4      8    17           3.0
+# Argentina(ARG)                  24.0   21     25     28    74          19.0
+# Armenia(ARM)                     6.0    2      6      6    14           7.0
+# Australasia(ANZ) [ANZ]           2.0    3      4      5    12           0.0
+#
+#                       Gold.1 Silver.1 Bronze.1 Total.1  Games Gold.2  \
+# Afghanistan(AFG)          NaN      NaN      NaN     NaN    NaN    NaN
+# Algeria(ALG)                0        0        0       0   16.0      5
+# Argentina(ARG)              0        0        0       0   43.0     21
+# Armenia(ARM)                0        0        0       0   13.0      2
+# Australasia(ANZ) [ANZ]      0        0        0       0    2.0      3
+#
+#                        Silver.2 Bronze.2 Combined Total
+# Afghanistan(AFG)            NaN      NaN            NaN
+# Algeria(ALG)                  4        8             17
+# Argentina(ARG)               25       28             74
+# Armenia(ARM)                  6        6             14
+# Australasia(ANZ) [ANZ]        4        5             12
+
+# 大多数DataFrame内置的统计功能都忽略NaN值
+# 统计得过金牌的国家总数，而不是金牌的总数
+print('\n统计得过金牌的国家的金牌总数 only_Gold[\'Gold\'].count():')
+print(only_Gold['Gold'].count())    # 109
+print('\n统计得过所有国家的总数 df[\'Gold\'].count():')
+print(df['Gold'].count())    # 153
+
+# 如果想删除包含NaN的row，可以使用dropna()
+print('\n删除包含NaN的国际 only_Gold.dropna():')
+b = only_Gold.dropna()
+print(b.head(3))
+#                 Summer Games Gold Silver Bronze Total  Winter Games Gold.1  \
+# Algeria(ALG)            13.0    5      4      8    17           3.0      0
+# Argentina(ARG)          24.0   21     25     28    74          19.0      0
+# Armenia(ARM)             6.0    2      6      6    14           7.0      0
+
+#               Silver.1 Bronze.1 Total.1  Games Gold.2 Silver.2 Bronze.2  \
+# Algeria(ALG)          0        0       0   16.0      5        4        8
+# Argentina(ARG)        0        0       0   43.0     21       25       28
+# Armenia(ARM)          0        0       0   13.0      2        6        6
+
+#               Combined Total
+# Algeria(ALG)               17
+# Argentina(ARG)             74
+# Armenia(ARM)               14
+
+
+
+# Pandas允许索引运算元使用布尔屏蔽，而不是列名称列表
+# 这样可以比较快的过滤和减少DataFrame，而且Pandas会自动过滤没有值的行
+# (df.where(df['Gold']>str(0))).dropna() == df[df['Gold']>str(0)]
+print('\n另一种使用布尔屏蔽的方式 df[df[\'Gold\']>str(0)]:')
+c = df[df['Gold']>str(0)]
+print(c.head(3))
+
+# 对两个布尔屏蔽进行逻辑比较运算，得到的另一个布尔屏蔽
+# 所以可以连接一堆的and/or来创建更复杂的查询
+print(len(df[ (df['Gold']>str(10)) & (df['Gold']<str(15)) ]))
+
+# 在冬季运动会得过金牌，但在夏季运动会没得过金牌
+print("在冬季运动会得过金牌，但在夏季运动会没得过金牌: ")
+print(df[(df['Gold.1']>str(0)) & (df['Gold']==str(0))])
+#                                          Summer Games Gold Silver Bronze  \
+# Liechtenstein(LIE)                                  17    0      0      0
+# Olympic Athletes from Russia(OAR) [OAR]              0    0      0      0
+
+#                                          Total  Winter Games Gold.1 Silver.1  \
+# Liechtenstein(LIE)                           0            19      2        2
+# Olympic Athletes from Russia(OAR) [OAR]      0             1      2        6
+
+#                                          Bronze.1 Total.1  Games Gold.2  \
+# Liechtenstein(LIE)                              6      10     36      2
+# Olympic Athletes from Russia(OAR) [OAR]         9      17      1      2
+#
+#                                          Silver.2 Bronze.2 Combined Total
+# Liechtenstein(LIE)                              2        6             10
+# Olympic Athletes from Russia(OAR) [OAR]         6        9             17
+
+
+
+#############################################################################
+#                       Indexing DataFrame                                  #
+#############################################################################
+
+# 索引本质上就是行的标签，行对应轴0（axis=0）
+# 我们可以用set_index来设定索引，但是这个是破坏性的，它不保留当前的索引
+# 如果想保留当前索引，可以手动创建一个新的列，并将index属性拷贝到新列中
+# 在olympic表中我们使用国家名作为index，但如果想以夏季金牌的数量作为index
+# 我们需要把原来的作为index的国家名保存在新列 country里，然后用set_index,使用夏季金牌数作为index，来设置新索引
+df['Country'] = df.index
+df = df.set_index('Gold')
+print("使用夏季金牌数作为index:")
+print(df.head())
+#       Summer Games Silver Bronze Total  Winter Games Gold.1 Silver.1 Bronze.1  \
+# Gold
+# 0               14      0      2     2             0      0        0        0
+# 5               13      4      8    17             3      0        0        0
+# 21              24     25     28    74            19      0        0        0
+# 2                6      6      6    14             7      0        0        0
+# 3                2      4      5    12             0      0        0        0
+
+#      Total.1  Games Gold.2 Silver.2 Bronze.2 Combined Total  \
+# Gold
+# 0          0     14      0        0        2              2
+# 5          0     16      5        4        8             17
+# 21         0     43     21       25       28             74
+# 2          0     13      2        6        6             14
+# 3          0      2      3        4        5             12
+
+#                     Country
+#Gold
+#0           Afghanistan(AFG)
+#5               Algeria(ALG)
+#21            Argentina(ARG)
+#2               Armenia(ARM)
+#3     Australasia(ANZ) [ANZ]
+
+# 我们还可以用reset_index来去除索引，这个会把原来的index作为索引，并创建一个新的索引
+df = df.reset_index()
+print(df.head())
+#  Gold  Summer Games Silver Bronze Total  Winter Games Gold.1 Silver.1  \
+#0    0            14      0      2     2             0      0        0
+#1    5            13      4      8    17             3      0        0
+#2   21            24     25     28    74            19      0        0
+#3    2             6      6      6    14             7      0        0
+#4    3             2      4      5    12             0      0        0
+
+#  Bronze.1 Total.1  Games Gold.2 Silver.2 Bronze.2 Combined Total  \
+#0        0       0     14      0        0        2              2
+#1        0       0     16      5        4        8             17
+#2        0       0     43     21       25       28             74
+#3        0       0     13      2        6        6             14
+#4        0       0      2      3        4        5             12
+
+#                  Country
+#0        Afghanistan(AFG)
+#1            Algeria(ALG)
+#2          Argentina(ARG)
+#3            Armenia(ARM)
+#4  Australasia(ANZ) [ANZ]
+
+
+#  Pandas还可以进行多层索引，与关系数据库的复合键相似
+#  创建多层索引，可以使用set_index
+
+
+
+
+
+
