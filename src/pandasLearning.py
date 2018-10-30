@@ -391,4 +391,30 @@ print("美国县最多的州的名字:\n",sort_result.iloc[0]['stataname'],sort_
 
 
 
+########################################
+#           找出每个周人口最多的前三个县
+########################################
+census_df = pd.read_csv('..\cfg\co-est2015-alldata.csv', encoding='gbk')
+states = census_df['STNAME'].unique()
+census_df = census_df.set_index(['STNAME','CTYNAME'])
+census_df = census_df.sort_index(level='STNAME')
+
+result = pd.DataFrame(columns=['stataname','CTYNAME'])
+
+#state_countries = census_df.loc[('Alabama',slice(None)),:]
+    # 对人口进行排序
+#state_countries = state_countries.sort_values(by=['CENSUS2010POP'], ascending=False)
+#print(state_countries['CENSUS2010POP'])
+
+
+for state in states:
+    # 得到每个州的所有县的DataFrame
+    state_countries = census_df.loc[(state,slice(None)),:]
+    # 对人口进行排序
+    state_countries = state_countries.sort_values(by=['CENSUS2010POP'], ascending=False)
+    print(state_countries.iloc[0]['CENSUS2010POP'])
+    #result = result.append(pd.Series(data={'stataname': state, 'countryNum': coutryNum}), ignore_index=True)
+
+
+
 
