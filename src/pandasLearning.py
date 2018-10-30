@@ -405,7 +405,7 @@ for state in states:
     #if(state == 'Alabama'):
 
     state_countries = census_df.loc[(state,slice(None)),:]
-    # 对人口进行排序
+    # 对人口进行降序排序
     state_countries = state_countries.sort_values(by=['CENSUS2010POP'], ascending=False)
 
     # 取排序后的前三个，也就是人口最多的三个country
