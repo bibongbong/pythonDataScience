@@ -401,19 +401,26 @@ census_df = census_df.sort_index(level='STNAME')
 
 result = pd.DataFrame(columns=['stataname','CTYNAME'])
 
-#state_countries = census_df.loc[('Alabama',slice(None)),:]
+state_countries = census_df.loc[('Alabama',slice(None)),:]
     # 对人口进行排序
-#state_countries = state_countries.sort_values(by=['CENSUS2010POP'], ascending=False)
-#print(state_countries['CENSUS2010POP'])
+state_countries = state_countries.sort_values(by=['CENSUS2010POP'], ascending=False)
+# 取某一行的index的具体值，多重索引也是二维的
+import numpy as np
+a = np.array(state_countries.index.levels)
+# a[0]是外层索引的列表，也就是state，a[1]是内层索引也就是coutry
+print(a[1])
 
 
+'''
 for state in states:
     # 得到每个州的所有县的DataFrame
     state_countries = census_df.loc[(state,slice(None)),:]
     # 对人口进行排序
     state_countries = state_countries.sort_values(by=['CENSUS2010POP'], ascending=False)
-    print(state_countries.iloc[0]['CENSUS2010POP'])
+    print(state_countries.iloc[0].index)
     #result = result.append(pd.Series(data={'stataname': state, 'countryNum': coutryNum}), ignore_index=True)
+
+'''
 
 
 
