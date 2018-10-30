@@ -124,7 +124,8 @@ print(df)
 # 解决列过多时，省略显示的问题
 pd.set_option('display.max_columns', None)
 
-df = pd.read_csv('..\cfg\olympic.csv', encoding='ANSI')
+# remove encoding='ANSI'
+df = pd.read_csv('..\cfg\olympic.csv' )
 #print(df)
 #                    0            1     2     3     4      5             6     7     8     9     10     11    12    13    14              15
 # 0               NaN  Summer Games  01 !  02 !  03 !  Total  Winter Games  01 !  02 !  03 !  Total  Games  01 !  02 !  03 !  Combined Total
@@ -136,7 +137,8 @@ df = pd.read_csv('..\cfg\olympic.csv', encoding='ANSI')
 
 # 我们可以使用index_col来指示哪一列是索引，也可以使用header参数来指示文件中的哪一行可以用来作为标签
 # 重新导入输入，设置index_col=0，这是第一列。使用skiprows来设置列的标签，忽略第一行，从第二行开始读取
-df = pd.read_csv('..\cfg\olympic.csv', encoding='ANSI', index_col=0, skiprows=1)
+# remove encoding='ANSI',在家里需要加上这个，在公司不需要
+df = pd.read_csv('..\cfg\olympic.csv', index_col=0, skiprows=1)
 #print(df.head()) # 输出如下
 #                NaN  Summer Games  01 !  02 !  03 !  Total  Winter Games  01 !.1  02 !.1  03 !.1  Total  Games  01 !.2  02 !.2  03 !.2  Combined Total
 #   Afghanistan(AFG)            14     0     0     2      2             0       0       0       0      0     14       0       0       2               2
@@ -367,7 +369,25 @@ print(df.head())
 #  Pandas还可以进行多层索引，与关系数据库的复合键相似
 #  创建多层索引，可以使用set_index
 
+####################################
+#           找出县最多的州的名字
+####################################
+# 为什么这个用gbk就可以了？？
+census_df = pd.read_csv('..\cfg\co-est2015-alldata.csv', encoding='gbk')
+states = census_df['STNAME'].unique()
+census_df = census_df.set_index(['STNAME', 'CTYNAME'])
+census_df = census_df.sort_index(level='STNAME')
 
+result = pd.DataFrame(columns=['stataname', 'countryNum'])
+for state in states:
+    state_countries = census_df.loc[(state, slice(None)), :]
+    state_countries
+    coutryNum = state_countries.count()[0]
+    result = result.append(pd.Series(data={'stataname': state, 'countryNum': coutryNum}), ignore_index=True)
+
+sort_result = result.sort_values(by=['countryNum'], ascending=False)
+
+print("美国县最多的州的名字:\n",sort_result.iloc[0]['stataname'],sort_result.iloc[0]['countryNum'])
 
 
 
