@@ -398,29 +398,40 @@ census_df = pd.read_csv('..\cfg\co-est2015-alldata.csv', encoding='gbk')
 states = census_df['STNAME'].unique()
 census_df = census_df.set_index(['STNAME','CTYNAME'])
 census_df = census_df.sort_index(level='STNAME')
-
-result = pd.DataFrame(columns=['stataname','CTYNAME'])
-
-state_countries = census_df.loc[('Alabama',slice(None)),:]
-    # 对人口进行排序
-state_countries = state_countries.sort_values(by=['CENSUS2010POP'], ascending=False)
-# 取某一行的index的具体值，多重索引也是二维的
-import numpy as np
-a = np.array(state_countries.index.levels)
-# a[0]是外层索引的列表，也就是state，a[1]是内层索引也就是coutry
-print(a[1])
+result = pd.DataFrame(columns=['stateName','countryName','pop'])
 
 
-'''
+
 for state in states:
     # 得到每个州的所有县的DataFrame
-    state_countries = census_df.loc[(state,slice(None)),:]
-    # 对人口进行排序
-    state_countries = state_countries.sort_values(by=['CENSUS2010POP'], ascending=False)
-    print(state_countries.iloc[0].index)
-    #result = result.append(pd.Series(data={'stataname': state, 'countryNum': coutryNum}), ignore_index=True)
+    #if(state == 'Alabama'):
 
-'''
+    state_countries = census_df.loc[(state,slice(None)),:]
+    # 对人口进行降序排序
+    state_countries = state_countries.sort_values(by=['CENSUS2010POP'], ascending=False)
+
+
+    # 取排序后的前三个，也就是人口最多的三个country
+    # 如果一个州的县小于3，则按照实际取值
+    resultNum = 3 if len(state_countries) >2 else len(state_countries)
+    #print(resultNum)
+    for i in range(resultNum):
+        # 二重索引的元组，(index1, index2),i表示第i行的索引
+        #print(state_countries.index[i])
+
+        # [i][0]为二重索引的外层所以，[i][1]为二重索引的内层索引，
+        countryName = state_countries.index[i][1]
+        popNum = state_countries.iloc[i]['CENSUS2010POP']
+        print(state_countries.index[i][0],countryName,popNum)
+        result = result.append(pd.Series(data={'stateName': state,
+                                               'countryName': countryName,
+                                               'pop':popNum}),
+                                        ignore_index=True)
+
+print(result)
+
+
+
 
 
 
