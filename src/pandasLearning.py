@@ -422,17 +422,58 @@ for state in states:
         # [i][0]为二重索引的外层所以，[i][1]为二重索引的内层索引，
         countryName = state_countries.index[i][1]
         popNum = state_countries.iloc[i]['CENSUS2010POP']
-        print(state_countries.index[i][0],countryName,popNum)
+        #print(state_countries.index[i][0],countryName,popNum)
         result = result.append(pd.Series(data={'stateName': state,
                                                'countryName': countryName,
                                                'pop':popNum}),
                                         ignore_index=True)
 
-print(result)
+#print(result)
 
 
+##################################
+#Which county has had the largest absolute change in population within the period 2010-2015?
+#  (Hint: population values are stored in columns POPESTIMATE2010 through POPESTIMATE2015, you need to consider all six columns.)
+# e.g. If County Population in the 5 year period is 100, 120, 80, 105, 100, 130,
+# then its largest change in the period would be |130-80| = 50.
+
+pop2010_2015 = census_df[['POPESTIMATE2010', 'POPESTIMATE2011','POPESTIMATE2012', 'POPESTIMATE2013','POPESTIMATE2014', 'POPESTIMATE2015']]
+#print("pop 2010-2015: \n",pop2010_2015.head(5))
+
+pop2010_2015['Max-Min'] = pop2010_2015.max(axis=1) - pop2010_2015.min(axis=1)
+pop2010_2015 = pop2010_2015.sort_values(by=['Max-Min'],ascending=False)
+print("pop 2010-2015: \n",pop2010_2015.index[0][1])
 
 
+#################################
+# In this datafile, the United States is broken up into four regions using the "REGION" column.
+# Create a query that finds the counties that belong to regions 1 or 2, whose name starts with 'Washington',
+# and whose POPESTIMATE2015 was greater than their POPESTIMATE 2014.
+census_df = pd.read_csv('..\cfg\co-est2015-alldata.csv', encoding='gbk')
+regions = census_df['REGION'].unique()
+print(regions)
+census_df = census_df.set_index(['REGION','CTYNAME'])
+census_df = census_df[['STNAME','POPESTIMATE2014','POPESTIMATE2015']]
+#result = pd.DataFrame(columns=['stateName','countryName','pop'])
+#print(census_df.head(3))
+for region in regions:
+    if region == 1 or region == 2:
+        census_df_region3 = census_df.loc[(region,slice(None)),:]
+        census_df_region3 = census_df_region3.where(census_df_region3['POPESTIMATE2015']>census_df_region3['POPESTIMATE2014']).dropna()
+        census_df_region3 = census_df_region3.reset_index()
+        census_df_region3 = census_df_region3.where((census_df_region3['CTYNAME']).str.contains('Washington')).dropna()
+        result = census_df[(census_df[['REGION']]==census_df_region3[['REGION']]) & (census_df[['CTYNAME']]==census_df_region3[['CTYNAME']]) & (census_df['STNAME']==census_df_region3['STNAME'])]
+        print(result)
+        #print(census_df_region3)
+
+
+#    REGION            CTYNAME        STNAME  POPESTIMATE2014  POPESTIMATE2015
+#72     1.0  Washington County  Pennsylvania         208175.0         208261.0
+#77     1.0  Washington County  Rhode Island         126430.0         126517.0
+#     REGION            CTYNAME     STNAME  POPESTIMATE2014  POPESTIMATE2015
+#89      2.0  Washington County       Iowa          22087.0          22247.0
+#202     2.0  Washington County  Minnesota         249320.0         251597.0
+#424     2.0  Washington County  Wisconsin         133301.0         133674.0
 
 
 
