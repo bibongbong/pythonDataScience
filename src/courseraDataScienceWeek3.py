@@ -77,7 +77,7 @@ print(adf)
  更常见的是，我们希望结合两个比较大的DataFrame在一起，首先我们需要解决一些关联理论，并设定一些语言惯例
  Venn图，用来显示集合的关系。设定两个dataframe，学生和雇员，有的人既是学生又是雇员。比如我们可以把人名作为index
  当我们想结合这两个DataFrame时，比如
- 1. 我们想要所有人的名单及详细信息，在数据库中，这称为full outer join，在集合理论中，称为union
+ 1. 我们想要所有人的名单及详细信息，在数据库中，这称为full outer join，在集合理论中，称为合并union
  2. 得到既是学生又是雇员的人的名单，数据库中称为内连接，inner join， 集合中称为交集 intersection
 
  这就需要用到Pandas的Merge功能
@@ -108,3 +108,90 @@ Mike           Law
 Sally  Engineering
 
 '''
+
+# 把两个DataFrame进行合并，第三个参数是要进行的操作外连接，也就是求并集，并且用左索引和右索引作为结合列
+# James和Sally既是职员又是学生，他们在各自表中的行合并为一行
+opd = pd.merge(staff_df,student_df, how='outer', left_index=True, right_index=True)
+print(opd)
+'''
+
+                 Role       School
+Name                              
+James          Grader     Business
+Kelly  Director of HR          NaN
+Mike              NaN          Law
+Sally  Course liasion  Engineering
+'''
+
+
+# 如果要求交集，也就是intersection，how属性设为inner 内连接
+ipd = pd.merge(staff_df,student_df,how='inner', left_index=True, right_index=True)
+'''
+print(ipd)
+                 Role       School
+Name                              
+Sally  Course liasion  Engineering
+James          Grader     Business
+'''
+
+
+# 集合加法
+# 当我们想要所有员工的名单，不论他们是否学生。但如果他们是学生，我们也想要获得他们的学生信息
+# 相当于以staff_df为基础，同时用student_df补充其内容
+# Kelly不是学生，所以在School里没有其信息
+lpd = pd.merge(staff_df,student_df, how='left', left_index=True, right_index=True)
+#print(lpd)
+'''
+                 Role       School
+Name                              
+Kelly  Director of HR          NaN
+Sally  Course liasion  Engineering
+James          Grader     Business
+'''
+
+# 同理，右连接，以student_df为基础，获得所有学生的信息，如果他们还是员工，则也获得他们的员工信息
+# Mike不是员工所以Role里没有其信息
+rpd = pd.merge(staff_df, student_df, how='right', left_index=True, right_index=True)
+'''
+print(rpd)
+                 Role       School
+Name                              
+James          Grader     Business
+Mike              NaN          Law
+Sally  Course liasion  Engineering
+'''
+
+# 另外还可以不使用index，可以使用列来代替index
+# 下例，还是左连接，以‘Name’作为index
+staff_df = staff_df.reset_index()
+student_df = student_df.reset_index()
+lopd = pd.merge(staff_df, student_df, how='left', left_on='Name', right_on='Name')
+'''
+print(lopd)
+    Name            Role       School
+0  Kelly  Director of HR          NaN
+1  Sally  Course liasion  Engineering
+2  James          Grader     Business
+'''
+
+
+# 当DataFrame之间有冲突时怎么处理
+# 下例，James和Sally 在两个表里的location的值不同，merge时把两个Location列分别命名为Location_x和Location_y
+# index，也就是'Name'左边的属于staff_df的Location，右边的是student_df的Location
+staff_df = pd.DataFrame([{'Name': 'Kelly', 'Role': 'Director of HR', 'Location': 'State Street'},
+                         {'Name': 'Sally', 'Role': 'Course liasion', 'Location': 'Washington Avenue'},
+                         {'Name': 'James', 'Role': 'Grader', 'Location': 'Washington Avenue'}])
+student_df = pd.DataFrame([{'Name': 'James', 'School': 'Business', 'Location': '1024 Billiard Avenue'},
+                           {'Name': 'Mike', 'School': 'Law', 'Location': 'Fraternity House #22'},
+                           {'Name': 'Sally', 'School': 'Engineering', 'Location': '512 Wilson Crescent'}])
+conf_pd = pd.merge(staff_df, student_df, how='left', left_on='Name', right_on='Name')
+pd.set_option('display.max_columns', None)
+
+'''
+print(conf_pd)
+          Location_x   Name            Role            Location_y       School
+0       State Street  Kelly  Director of HR                   NaN          NaN
+1  Washington Avenue  Sally  Course liasion   512 Wilson Crescent  Engineering
+2  Washington Avenue  James          Grader  1024 Billiard Avenue     Business
+'''
+
