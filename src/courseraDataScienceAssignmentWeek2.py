@@ -152,7 +152,7 @@ def answer_five_me():
 # Only looking at the three most populous counties for each state, what are the three most populous states (in order of highest population to lowest population)? Use `CENSUS2010POP`.
 #
 # *This function should return a list of string values.*
-
+#
 # In[ ]:
 
 def answer_six():
@@ -160,8 +160,9 @@ def answer_six():
     copy_df = copy_df.groupby(['STNAME'])
     states_pop = pd.DataFrame(columns=['pop'])
     for i, c in copy_df:
-        #先对当前州的所有县以人口排序，然后取人口最多的前三个，然后对CENSUS2010POP，取这三个县的总和，最后把三县人口总和作为结果保存到states_pops
-        #[1:4]是第2到4行，因为groupby后，第一行是州的总量，具体的县是从第二行开始的
+        # c.sort_values(by='CENSUS2010POP', ascending=False) ==> 先对当前州的所有县以人口排序
+        # [1:4] ==> 然后取人口最多的前三个, 从第2到4行，因为groupby后，第一行是州的总量，具体的县是从第二行开始的
+        # ['CENSUS2010POP'].sum() ==> 然后对CENSUS2010POP，取这三个县的总和，最后把三县人口总和作为结果保存到states_pops
         states_pop.loc[i] = [c.sort_values(by='CENSUS2010POP', ascending=False)[1:4]['CENSUS2010POP'].sum()]
 
     #最后states_pop得到的是各个州人口最多的三县人口总和，取最大的前三个nlargest(3,'pop')
