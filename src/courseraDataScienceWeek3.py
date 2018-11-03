@@ -112,9 +112,9 @@ Sally  Engineering
 # 把两个DataFrame进行合并，第三个参数是要进行的操作外连接，也就是求并集，并且用左索引和右索引作为结合列
 # James和Sally既是职员又是学生，他们在各自表中的行合并为一行
 opd = pd.merge(staff_df,student_df, how='outer', left_index=True, right_index=True)
-print(opd)
-'''
 
+'''
+print(opd)
                  Role       School
 Name                              
 James          Grader     Business
@@ -195,3 +195,83 @@ print(conf_pd)
 2  Washington Avenue  James          Grader  1024 Billiard Avenue     Business
 '''
 
+
+'''
+多索引和多列
+名字可能相同，但姓相同的少，比如James Wilde和James Hammond，我们设置'FirstName'和‘LastName’两类，
+不管是使用left_on还是right_on，在使用inner连接，就是求交集时都找不到这些人
+
+'''
+staff_df = pd.DataFrame([{'First Name': 'Kelly', 'Last Name': 'Desjardins', 'Role': 'Director of HR'},
+                         {'First Name': 'Sally', 'Last Name': 'Brooks', 'Role': 'Course liasion'},
+                         {'First Name': 'James', 'Last Name': 'Wilde', 'Role': 'Grader'}])
+student_df = pd.DataFrame([{'First Name': 'James', 'Last Name': 'Hammond', 'School': 'Business'},
+                           {'First Name': 'Mike', 'Last Name': 'Smith', 'School': 'Law'},
+                           {'First Name': 'Sally', 'Last Name': 'Brooks', 'School': 'Engineering'}])
+staff_df
+student_df
+print(pd.merge(staff_df, student_df, how='inner', left_on=['First Name','Last Name'], right_on=['First Name','Last Name']))
+'''
+  First Name Last Name            Role       School
+0      Sally    Brooks  Course liasion  Engineering
+'''
+
+'''
+---------------------------   Pandas Idioms   -----------------------------------------
+idoms惯用的意思
+
+例如，你想取名为Washtenaw的县的总人口，df.loc['Washtenaw']['Total Population']，这通常是个很糟糕的做法，它会返回DataFrame的副本
+经验法则：如果你看到一个背靠背的方括号 '][',你就该好好思考一下了。
+    
+惯用的解决方案通常具有高性能和高可读性。例如尽可能使用向量化， 尽量避免反复使用loops。我们把这些称为pandorable
+1. 方法连接 method chaining。当查询DataFrame时，可以将pandas的程序调用链接在一起
+    对某个对象使用每个方法，都会返回对该对象的引用，这样的好处是可以将不同的操作应用在一个DataFrame，集中在一行或至少一个语句中
+
+以下是同一种功能的两种实现
+
+(df.where(df['SUMLEV']==50)
+    .dropna()
+    .set_index(['STNAME','CTYNAME'])
+    .rename(columns={'ESTIMATESBASE2010': 'Estimates Base 2010'}))
+
+df = df[df['SUMLEV']==50]
+df.set_index(['STNAME','CTYNAME'], inplace=True)
+df.rename(columns={'ESTIMATESBASE2010': 'Estimates Base 2010'})
+'''
+
+'''
+另一个惯用法：
+Python的Map功能，使用Map时，传递一些你想要调用的函数，一些可迭代的对象。
+在Pandas中有apply，它提供了对DataFrame的每个单元格进行操作的函数。applymap很好，但是很少使用
+统计中，有五列对应一年的估计，我们可以创建一个新列min或者max
+'''
+census_df = pd.read_csv('..\cfg\co-est2015-alldata.csv', encoding='gbk')
+import numpy as np
+def min_max(row):
+    #取某列，要用到双方括号[[]]
+    columns = row[['POPESTIMATE2010',
+                'POPESTIMATE2011',
+                'POPESTIMATE2012',
+                'POPESTIMATE2013',
+                'POPESTIMATE2014',
+                'POPESTIMATE2015']]
+    # 生成一个新的Series
+    return pd.Series({'min':np.min(columns), 'max':np.max(columns)})
+
+# 一般axis=0表示对行进行操作，比如b.sum(axis=0)，对b的每行的值做sum，行总数，
+# b.sum(axis=1)，对b的每行的值做sum，列总数
+# 但在这里，要应用到所有的行，axis必须等于1
+#print(.apply(min_max, axis=1))
+
+# 如果是要在原来的DataFrame的基础上添加Min Max列。
+# row['min'] = np.min(data)
+# row['max'] = np.max(data)
+
+# 可以使用lambda
+rows = ['POPESTIMATE2010',
+        'POPESTIMATE2011',
+        'POPESTIMATE2012',
+        'POPESTIMATE2013',
+        'POPESTIMATE2014',
+        'POPESTIMATE2015']
+census_df.apply(lambda x:np.max(x[rows]), axis=1)
