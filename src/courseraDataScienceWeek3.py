@@ -210,8 +210,8 @@ student_df = pd.DataFrame([{'First Name': 'James', 'Last Name': 'Hammond', 'Scho
                            {'First Name': 'Sally', 'Last Name': 'Brooks', 'School': 'Engineering'}])
 staff_df
 student_df
-print(pd.merge(staff_df, student_df, how='inner', left_on=['First Name','Last Name'], right_on=['First Name','Last Name']))
 '''
+print(pd.merge(staff_df, student_df, how='inner', left_on=['First Name','Last Name'], right_on=['First Name','Last Name']))
   First Name Last Name            Role       School
 0      Sally    Brooks  Course liasion  Engineering
 '''
@@ -275,3 +275,63 @@ rows = ['POPESTIMATE2010',
         'POPESTIMATE2014',
         'POPESTIMATE2015']
 census_df.apply(lambda x:np.max(x[rows]), axis=1)
+
+'''
+---------------------------   Group by   -----------------------------------------
+groupby 接受一些列名，然后对DataFrame进行分组
+比如，我们先加载人口普查数据，然后排除州级摘要，其SUMLEV是40  
+'''
+
+# 第一种方法，遍历
+#df = census_df[census_df['SUMLEV']==50]
+#for state in df['STNAME'].unique():
+    # 求州的人口平均值
+#    avg = np.average(df.where(df['STNAME']==state).dropna()['CENSUS2010POP'])
+    #print('State: '+state+', ave:'+str(avg))
+
+# 第二种方法，groupby
+#for state, group in census_df.groupby(by='STNAME',axis=0):
+#    avg = np.average(group['CENSUS2010POP'])
+#    print('State: ' + state + ', ave:' + str(avg))
+
+
+# 99%的时候groupby用在一列或者多列上，但还可以给groupby提供一个函数
+# 把州名的按首字母来分组，A~L的为0， M~P的为1，Q~Z为2，把这个规则作为groupby的分组规则
+# 首先要先设置索引
+df = census_df.set_index('STNAME')
+def fun(item):
+    if item[0] < 'M':
+        return 0
+    elif item[0] < 'Q':
+        return 1
+    else:
+        return 2
+
+# 这里groupby会把已经设置好的索引STNAME作为入参传给fun()
+#for group, frame in df.groupby(fun):
+    #print('There are ' + str(len(frame))+' in group '+ str(group) +' to processing')
+'''
+There are 1196 in group 0 to processing
+There are 1154 in group 1 to processing
+There are 843 in group 2 to processing
+'''
+
+# groupby的常用功能就是分割数据
+# 这被称为分割split，应用apply和组合combine模式
+# groupby的agg应用方法，就是聚合aggregate
+df = census_df[census_df['SUMLEV']==50]
+# groupby是分割，agg是应用，应用的对象是'CENSUS2010POP'，所作的操作是np.average方法
+print(df.groupby('STNAME').agg({'CENSUS2010POP':np.average}))
+
+
+#-------------------------
+# 一个表有Category，Quantity，Weight (oz.)
+# 要对Category分组，求Quantity*Weight 的值
+
+print(df.groupby('Category').apply(lambda df,a,b: sum(df[a] * df[b]), 'Weight (oz.)', 'Quantity'))
+
+# Or alternatively without using a lambda:
+# def totalweight(df, w, q):
+#        return sum(df[w] * df[q])
+#
+# print(df.groupby('Category').apply(totalweight, 'Weight (oz.)', 'Quantity'))
