@@ -321,17 +321,124 @@ There are 843 in group 2 to processing
 # groupby的agg应用方法，就是聚合aggregate
 df = census_df[census_df['SUMLEV']==50]
 # groupby是分割，agg是应用，应用的对象是'CENSUS2010POP'，所作的操作是np.average方法
-print(df.groupby('STNAME').agg({'CENSUS2010POP':np.average}))
+#print(df.groupby('STNAME').agg({'CENSUS2010POP':np.average}))
 
 
 #-------------------------
 # 一个表有Category，Quantity，Weight (oz.)
 # 要对Category分组，求Quantity*Weight 的值
 
-print(df.groupby('Category').apply(lambda df,a,b: sum(df[a] * df[b]), 'Weight (oz.)', 'Quantity'))
+#print(df.groupby('Category').apply(lambda df,a,b: sum(df[a] * df[b]), 'Weight (oz.)', 'Quantity'))
 
 # Or alternatively without using a lambda:
 # def totalweight(df, w, q):
 #        return sum(df[w] * df[q])
 #
 # print(df.groupby('Category').apply(totalweight, 'Weight (oz.)', 'Quantity'))
+
+
+'''
+当你传入的字典，它既可以用来识别你要应用函数的列，或如果有多个函数要应用的话，可以应用在命名输出的列，
+差别在于你传入的字典的键和他的命名方式
+
+groupby对象其实有两个，DataFrameGroupBy和SeriesGroupBy对象
+他们的不同之处在于，当使用agg时，
+'''
+#print(type(df.groupby(level=0)['POPESTIMATE2010','POPESTIMATE2011']))
+#print(type(df.groupby(level=0)['POPESTIMATE2010']))
+#<class 'pandas.core.groupby.groupby.DataFrameGroupBy'>
+#<class 'pandas.core.groupby.groupby.SeriesGroupBy'>
+
+
+
+'''
+对人口普查数据，将其转换为以州名称，为索引，只用列CENSUS2010POP作为数据
+'''
+#print(df.set_index('STNAME').groupby(level=0)['CENSUS2010POP'].agg({'avg':np.average, 'sum':np.sum, 'max':np.max}))
+
+'''
+我们也可以通过使用DataFrame来做这件事
+下面这个例子，传递给agg的字典的key，会以这个key创建一个分层标记的列
+'''
+#print(df.set_index('STNAME').groupby(level=0)['POPESTIMATE2010','POPESTIMATE2011'].agg({'avg':np.average, 'sum':np.sum}).head(3))
+'''
+                    sum                             avg
+        POPESTIMATE2010 POPESTIMATE2011 POPESTIMATE2010 POPESTIMATE2011
+STNAME
+Alabama         4785161         4801108    71420.313433    71658.328358
+Alaska           714021          722720    24621.413793    24921.379310
+Arizona         6408208         6468732   427213.866667   431248.800000
+'''
+
+'''
+我们也可以通过使用DataFrame来做这件事
+下面这个例子，与上面的不同，传递给agg的字典的key就是原dataframe的列名，而不会创建分层标记的列
+这种方式用的比较少
+'''
+#print(df.set_index('STNAME').groupby(level=0)['POPESTIMATE2010','POPESTIMATE2011'].agg({'POPESTIMATE2010':np.average, 'POPESTIMATE2011':np.sum}).head(3))
+'''
+         POPESTIMATE2010  POPESTIMATE2011
+STNAME
+Alabama     71420.313433          4801108
+Alaska      24621.413793           722720
+Arizona    427213.866667          6468732
+'''
+
+
+
+'''
+----------------------         Scales          --------------------------
+'''
+
+'''
+作为一个数据科学家，有四个尺度需要了解：
+1. 比率尺度。ratio，在比率尺度中，单位间隔相等。数学运算，加减乘除，都有效。比如，高度和重量
+2. 间隔尺度。Interval，单位间隔相等，没有一个真正的零，所以乘法和除法是无效的。比如 温度
+3. 序数尺度。Ordinal，在序数尺度，值的顺序很重要，但值之间的差异不等间隔，
+4. 名义尺度。nominal，在Pandas里一般被称为分类（categorical）数据，
+数据挖掘所做的大部分工作里，比率尺度和间隔尺度的差异不是那么大
+
+尺度的重要性就在于在统计和机器学习方面，Pandas有很多有趣的功能在不同的测量测度之间转换，
+'''
+
+'''
+Pandas有内置的分类数据，你可以使用astype方法将column设置为分类数据
+astype方法会把你的数据设置为分类数据，astype会更改你的数据的底层类型。
+你也可以进一步将其更改为序数数据，通过将ordered标志设为True，并以有序的方式传递分类
+'''
+df = pd.DataFrame(['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D'],
+                  index=['excellent', 'excellent', 'excellent', 'good', 'good', 'good', 'ok', 'ok', 'ok', 'poor', 'poor'])
+
+df.rename(columns={0: 'Grades'}, inplace=True)
+'''
+          Grades
+excellent     A+
+excellent      A
+excellent     A-
+good          B+
+good           B
+good          B-
+ok            C+
+ok             C
+ok            C-
+poor          D+
+poor           D
+'''
+
+''''
+我们指示Pandas将其作为分类数据时，dtype已经是category，并且有了11个不同的类别
+'''
+print(df['Grades'].astype('category').head())
+'''
+excellent    A+
+excellent     A
+excellent    A-
+good         B+
+good          B
+Name: Grades, dtype: category
+Categories (11, object): [A, A+, A-, B, ..., C+, C-, D, D+]
+'''
+
+'''
+如果我们想要想Pandas表明这些数据是按逻辑顺序的，我们可以设置ordered=True，
+'''
