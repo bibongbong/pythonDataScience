@@ -428,7 +428,7 @@ poor           D
 ''''
 我们指示Pandas将其作为分类数据时，dtype已经是category，并且有了11个不同的类别
 '''
-print(df['Grades'].astype('category').head())
+#print(df['Grades'].astype('category').head())
 '''
 excellent    A+
 excellent     A
@@ -442,3 +442,43 @@ Categories (11, object): [A, A+, A-, B, ..., C+, C-, D, D+]
 '''
 如果我们想要想Pandas表明这些数据是按逻辑顺序的，我们可以设置ordered=True，
 '''
+#grades = df['Grades'].astype('category',
+#                             categories=['D', 'D+', 'C-', 'C', 'C+', 'B-', 'B', 'B+', 'A-', 'A', 'A+'],
+#                             ordered=True)
+#print(grades)
+'''
+Name: Grades, dtype: category
+Categories (11, object): [D < D+ < C- < C ... B+ < A- < A < A+]
+'''
+#print(grades > 'C')
+'''
+excellent     True
+excellent     True
+excellent     True
+good          True
+good          True
+good          True
+ok            True
+ok           False
+ok           False
+poor         False
+poor         False
+Name: Grades, dtype: bool
+'''
+
+'''
+序数数据有一个排序，它可以帮助你进行布尔屏蔽，
+比如，我们有我们的成绩列表，我们将它与C比较，如果根据字典顺序，C+和C-都大于C，可是我们已经了数据顺序
+然后我们可以
+'''
+
+
+'''
+如果我们使用机器学习分类方法处理数据，则需要使用分类数据，所以降低维度dimensionality也是有用的。
+Pandas的Cut功能，它接受一个参数，这个参数可以是一个Series或DataFrame。它还需要使用多个盒子bins
+并且所有盒子保持相同间距，
+我们可以按州来分组，然后总汇州的县级平均人口，如果我们应用cut，用10个bins，我们可以看到
+州列出了使用县级平均人口的分类
+'''
+df.groupby(level=0)['CENSUS2010POP'].agg({'ave':np.average})
+print(pd.cut(df['avg'],10))
