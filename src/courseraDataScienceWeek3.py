@@ -477,8 +477,199 @@ Name: Grades, dtype: bool
 如果我们使用机器学习分类方法处理数据，则需要使用分类数据，所以降低维度dimensionality也是有用的。
 Pandas的Cut功能，它接受一个参数，这个参数可以是一个Series或DataFrame。它还需要使用多个盒子bins
 并且所有盒子保持相同间距，
-我们可以按州来分组，然后总汇州的县级平均人口，如果我们应用cut，用10个bins，我们可以看到
-州列出了使用县级平均人口的分类
+
 '''
-df.groupby(level=0)['CENSUS2010POP'].agg({'ave':np.average})
-print(pd.cut(df['avg'],10))
+#df.groupby(level=0)['CENSUS2010POP'].agg({'ave':np.average})
+#print(pd.cut(df['avg'],10))
+
+ages = [20, 22, 25, 27, 21, 23, 37, 31, 61, 45, 41, 32]
+bins = [18, 25, 35, 60, 100]    # bins可以是整数，表示划分为几份，也可以是这样的数组，表示按照这几个节点划分
+cats = pd.cut(ages, bins, labels=['s', 'm', 'l', 'xl'])
+#print(cats)
+'''
+[s, s, s, m, s, ..., m, xl, l, l, m]
+Length: 12
+Categories (4, object): [s < m < l < xl]
+'''
+#print(cats.codes)
+'''
+[0 0 0 1 0 0 2 1 3 2 2 1]
+表示12个元素分别处于4个区间的哪一个
+'''
+#print(cats.categories)
+#Index(['s', 'm', 'l', 'xl'], dtype='object')
+#print(pd.value_counts(cats))
+'''
+s     5
+l     3
+m     3
+xl    1
+dtype: int64
+'''
+
+data = np.random.rand(20)
+'''
+[0.70081209 0.37097134 0.6662884  0.0961317  0.02201284 0.58679348
+ 0.35126993 0.82245626 0.44544119 0.49660155 0.98868394 0.98236028
+ 0.13529538 0.26003261 0.90252838 0.18780304 0.39163854 0.80016992
+ 0.59936142 0.66380607]
+'''
+#print(data)
+#print(pd.cut(data, 5, precision=2))
+'''
+[(0.6, 0.8], (0.22, 0.41], (0.6, 0.8], (0.021, 0.22], (0.021, 0.22], ..., (0.021, 0.22], (0.22, 0.41], (0.8, 0.99], (0.41, 0.6], (0.6, 0.8]]
+Length: 20
+Categories (5, interval[float64]): [(0.021, 0.22] < (0.22, 0.41] < (0.41, 0.6] < (0.6, 0.8] <
+                                    (0.8, 0.99]]
+precision指定精度，
+'''
+
+
+'''
+------------------------   Pivot Table   ------------------------------
+枢纽分析表，又称为透视表，为了特定的目的，聚合DataFrame中的数据的一种方式
+它大量使用聚合agg功能，Pivot Table本身就是一个DataFrame，其中行代表一个变数
+
+'''
+pd.set_option('display.width', 500)
+df = pd.read_csv('..\cfg\cars.csv', encoding='gbk')
+#print(df.head())
+'''
+   YEAR        MAKE           MODEL        SIZE   (kW) Unnamed:5 TYPE  CITY (kWh/100 km)  HWY (kWh/100 km)  COMB (kWh/100 km)  CITY (Le/100 km)  HWY (Le/100 km)  COMB (Le/100 km)  (g/km)  RATING  RATING.1   (km)  TIME (h)
+0  2012  MITSUBISHI          i-MiEV  SUBCOMPACT   49.0        A1    B               16.9              21.4               18.7               1.9              2.4               2.1     0.0     NaN       NaN  100.0       7.0
+1  2012      NISSAN            LEAF    MID-SIZE   80.0        A1    B               19.3              23.0               21.1               2.2              2.6               2.4     0.0     NaN       NaN  117.0       7.0
+2  2013        FORD  FOCUS ELECTRIC     COMPACT  107.0        A1    B               19.0              21.1               20.0               2.1              2.4               2.2     0.0     NaN       NaN  122.0       4.0
+3  2013  MITSUBISHI          i-MiEV  SUBCOMPACT   49.0        A1    B               16.9              21.4               18.7               1.9              2.4               2.1     0.0     NaN       NaN  100.0       7.0
+4  2013      NISSAN            LEAF    MID-SIZE   80.0        A1    B               19.3              23.0               21.1               2.2              2.6               2.4     0.0     NaN       NaN  117.0       7.0
+
+'''
+#print(df.pivot_table(index=['YEAR'], values=['(kW)'], columns=['MAKE'], aggfunc=np.mean))
+'''
+这句透视表的作用的就是，YEAR作为row（index）， MAKE作为column，kw作为数据，并对kw的数据求平均 np.mean
+没有值的，就用NaN
+      (kW)
+MAKE    BMW CHEVROLET   FORD HYUNDAI   KIA MITSUBISHI NISSAN SMART       TESLA TESLA  VOLKSWAGEN
+YEAR
+2012    NaN       NaN    NaN     NaN   NaN       49.0   80.0   NaN         NaN    NaN        NaN
+2013    NaN       NaN  107.0     NaN   NaN       49.0   80.0  35.0  257.500000    NaN        NaN
+2014    NaN     104.0  107.0     NaN   NaN       49.0   80.0  35.0  268.333333    NaN        NaN
+2015  125.0     104.0  107.0     NaN  81.0       49.0   80.0  35.0  321.666667    NaN        NaN
+2016  125.0     104.0  107.0     NaN  81.0       49.0   80.0  35.0  409.823529  386.0        NaN
+2017  125.0     150.0  107.0    88.0  81.0       49.0   80.0   NaN  383.142857  464.0      100.0
+2018  130.0     150.0  107.0    88.0  81.0        NaN  110.0  60.0  387.300000    NaN      100.0
+'''
+
+'''
+如果我们希望针对同一个透视表，进行不同的操作，比如同时显示sum和mean，则可以添加margins=True来显示
+现在每个功能都有一个all类别，它在给定的年份和厂家上，显示总体平均值和最小值，
+如果margins为False则不显示all
+'''
+#print(df.pivot_table(index=['YEAR'], values=['(kW)'], columns=['MAKE'], aggfunc=[np.mean,np.min], margins=False))
+'''
+            mean                                                                                                      amin
+            (kW)                                                                                                      (kW)
+MAKE         BMW CHEVROLET   FORD HYUNDAI   KIA MITSUBISHI  NISSAN SMART       TESLA  TESLA  VOLKSWAGEN         All    BMW CHEVROLET   FORD HYUNDAI   KIA MITSUBISHI NISSAN SMART  TESLA TESLA  VOLKSWAGEN   All
+YEAR
+2012         NaN       NaN    NaN     NaN   NaN       49.0   80.00   NaN         NaN     NaN        NaN   64.500000    NaN       NaN    NaN     NaN   NaN       49.0   80.0   NaN    NaN    NaN        NaN  49.0
+2013         NaN       NaN  107.0     NaN   NaN       49.0   80.00  35.0  257.500000     NaN        NaN  148.444444    NaN       NaN  107.0     NaN   NaN       49.0   80.0  35.0  225.0    NaN        NaN  35.0
+2014         NaN     104.0  107.0     NaN   NaN       49.0   80.00  35.0  268.333333     NaN        NaN  135.000000    NaN     104.0  107.0     NaN   NaN       49.0   80.0  35.0  225.0    NaN        NaN  35.0
+2015  125.000000     104.0  107.0     NaN  81.0       49.0   80.00  35.0  321.666667     NaN        NaN  181.857143  125.0     104.0  107.0     NaN  81.0       49.0   80.0  35.0  280.0    NaN        NaN  35.0
+2016  125.000000     104.0  107.0     NaN  81.0       49.0   80.00  35.0  409.823529  386.00        NaN  298.111111  125.0     104.0  107.0     NaN  81.0       49.0   80.0  35.0  285.0  386.0        NaN  35.0
+2017  125.000000     150.0  107.0    88.0  81.0       49.0   80.00   NaN  383.142857  464.00      100.0  297.173913  125.0     150.0  107.0    88.0  81.0       49.0   80.0   NaN  285.0  386.0      100.0  49.0
+2018  130.000000     150.0  107.0    88.0  81.0        NaN  110.00  60.0  387.300000     NaN      100.0  244.450000  125.0     150.0  107.0    88.0  81.0        NaN  110.0  60.0  192.0    NaN      100.0  60.0
+All   126.666667     122.4  107.0    88.0  81.0       49.0   83.75  40.0  367.808511  454.25      100.0  240.375000  125.0     104.0  107.0    88.0  81.0       49.0   80.0  35.0  192.0  386.0      100.0  35.0
+
+'''
+
+
+'''
+-----------------------------           在Pandas中查看时间序列是日期           -------------------------------------
+'''
+'''
+Pandas有四种与时间相关的类型：Timestamp, DatetimeIndex, Period和PeriodIndex
+Timestamp：单个时间戳，并将值和时间点相关联，大多数情况下Timestamp可以于Python的datatime互换
+'''
+#print(pd.Timestamp('11/9/2018 16:10'))
+#2018-11-09 16:10:00
+
+'''
+Period表示单个时间跨度，例如特定的日期或者月份
+'''
+#print(pd.Period('11/2018'))
+# 2018-11
+#print(pd.Period('11/9/2018'))
+# 2018-11-09
+
+'''
+timestamp的索引index是DatetimeIndex
+下面的例子，每个timestamp作为索引，查看索引的类型为DatetimeIndex
+'''
+t1 = pd.Series(list('abc'),[pd.Timestamp('2018-11-5'), pd.Timestamp('2018-11-6'), pd.Timestamp('2018-11-7')])
+#print(t1)
+#print(t1.index)
+'''
+2018-11-05    a
+2018-11-06    b
+2018-11-07    c
+dtype: object
+
+DatetimeIndex(['2018-11-05', '2018-11-06', '2018-11-07'], dtype='datetime64[ns]', freq=None)
+'''
+
+'''
+同样Period的索引是PeriodIndex
+'''
+
+t2 = pd.Series(list('def'),[pd.Period('2018-11-5'), pd.Period('2018-11-6'), pd.Period('2018-11-7')])
+#print(t2)
+#print(t2.index)
+'''
+2018-11-05    d
+2018-11-06    e
+2018-11-07    f
+Freq: D, dtype: object
+PeriodIndex(['2018-11-05', '2018-11-06', '2018-11-07'], dtype='period[D]', freq='D')
+'''
+
+
+'''
+转换日期时间
+'''
+d1 = ['2 June 2013', 'Aug 29, 2014', '2015-06-26', '7/12/16']
+ts3 = pd.DataFrame(np.random.randint(10,100,(4,2)),index=d1, columns=list('ab'))
+#print(ts3)
+'''
+               a   b
+2 June 2013   77  76
+Aug 29, 2014  75  41
+2015-06-26    29  10
+7/12/16       97  15
+
+这里index的日期格式很混乱，使用to_datetime，pandas会尝试转化为日期时间，并放到标准格式中
+'''
+ts3.index = pd.to_datetime(ts3.index)
+#print(ts3)
+'''
+             a   b
+2013-06-02  29  10
+2014-08-29  46  93
+2015-06-26  57  66
+2016-07-12  29  53
+
+to_datetime还有更改日期解析顺序的选项， dayfirst=True来解析欧洲日期格式
+'''
+print(pd.to_datetime('4.7.12', dayfirst=True))
+#2012-07-04 00:00:00
+
+
+'''
+时间差 Timedelta
+两个时间戳的间隔
+'''
+print(pd.Timestamp('11/9/2018') - pd.Timestamp('1/6/2011'))
+print(type(pd.Timestamp('11/9/2018') - pd.Timestamp('1/6/2011')))
+'''
+2864 days 00:00:00
+<class 'pandas._libs.tslibs.timedeltas.Timedelta'>
+'''
+
