@@ -658,7 +658,7 @@ ts3.index = pd.to_datetime(ts3.index)
 
 to_datetime还有更改日期解析顺序的选项， dayfirst=True来解析欧洲日期格式
 '''
-print(pd.to_datetime('4.7.12', dayfirst=True))
+#print(pd.to_datetime('4.7.12', dayfirst=True))
 #2012-07-04 00:00:00
 
 
@@ -666,10 +666,84 @@ print(pd.to_datetime('4.7.12', dayfirst=True))
 时间差 Timedelta
 两个时间戳的间隔
 '''
-print(pd.Timestamp('11/9/2018') - pd.Timestamp('1/6/2011'))
-print(type(pd.Timestamp('11/9/2018') - pd.Timestamp('1/6/2011')))
+#print(pd.Timestamp('11/9/2018') - pd.Timestamp('1/6/2011'))
+#print(type(pd.Timestamp('11/9/2018') - pd.Timestamp('1/6/2011')))
 '''
 2864 days 00:00:00
 <class 'pandas._libs.tslibs.timedeltas.Timedelta'>
+'''
+
+'''
+也可以在一个Timestamp的基础上加一个Timedelta
+'''
+print(pd.Timestamp('11/9/2018') + pd.Timedelta(weeks=2,days=10,hours=12,minutes=2.4,seconds=10.3))
+'''
+2018-12-03 12:02:34.300000
+'''
+
+
+'''
+查看九次测量，两周一次，每个周日，从2016年10月开始，使用data_range，我们可以创建这个DatetimeIndex
+pandas.date_range(start=None, end=None, periods=None, freq='D', tz=None, normalize=False, name=None, closed=None, **kwargs)
+freq='M'每月，'3M'3个月，
+'''
+dates = pd.date_range('10-01-2016', periods=9, freq='2w-SUN')
+print(dates)
+'''
+DatetimeIndex(['2016-10-02', '2016-10-16', '2016-10-30', '2016-11-13', '2016-11-27', '2016-12-11', '2016-12-25', '2017-01-08', '2017-01-22'], dtype='datetime64[ns]', freq='2W-SUN')
+'''
+
+'''
+使用日期和随机数
+'''
+df = pd.DataFrame( {'Count1 ':100+np.random.randint(-5, 10, 9).cumsum(), 'Count2':120+np.random.randint(-5, 10, 9)}, index=dates)
+print(df)
+'''
+
+            Count1   Count2
+2016-10-02       97     119
+2016-10-16      101     115
+2016-10-30      106     118
+2016-11-13      112     118
+2016-11-27      115     115
+2016-12-11      118     124
+2016-12-25      123     118
+2017-01-08      120     129
+2017-01-22      123     115
+'''
+
+print(df.index.weekday_name)
+'''
+Index(['Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday'], dtype='object')
+'''
+
+'''
+使用diff来查找每个日期值之间的差异
+'''
+print(df.diff())
+'''
+            Count1   Count2
+2016-10-02      NaN     NaN
+2016-10-16      0.0    -1.0
+2016-10-30      4.0    -3.0
+2016-11-13     -5.0     6.0
+2016-11-27      4.0    -2.0
+2016-12-11      4.0     3.0
+2016-12-25     -5.0    -3.0
+2017-01-08      2.0    -1.0
+2017-01-22      3.0     1.0
+'''
+
+
+'''
+如果想知道每个月的平均数
+'''
+print(df.resample('M').mean())
+'''
+            Count1       Count2
+2016-10-31    105.0  124.666667
+2016-11-30    110.0  121.500000
+2016-12-31    115.5  125.500000
+2017-01-31    108.0  124.000000
 '''
 
