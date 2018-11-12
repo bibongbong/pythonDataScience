@@ -676,7 +676,7 @@ to_datetime还有更改日期解析顺序的选项， dayfirst=True来解析欧�
 '''
 也可以在一个Timestamp的基础上加一个Timedelta
 '''
-print(pd.Timestamp('11/9/2018') + pd.Timedelta(weeks=2,days=10,hours=12,minutes=2.4,seconds=10.3))
+#print(pd.Timestamp('11/9/2018') + pd.Timedelta(weeks=2,days=10,hours=12,minutes=2.4,seconds=10.3))
 '''
 2018-12-03 12:02:34.300000
 '''
@@ -688,7 +688,7 @@ pandas.date_range(start=None, end=None, periods=None, freq='D', tz=None, normali
 freq='M'每月，'3M'3个月，
 '''
 dates = pd.date_range('10-01-2016', periods=9, freq='2w-SUN')
-print(dates)
+#print(dates)
 '''
 DatetimeIndex(['2016-10-02', '2016-10-16', '2016-10-30', '2016-11-13', '2016-11-27', '2016-12-11', '2016-12-25', '2017-01-08', '2017-01-22'], dtype='datetime64[ns]', freq='2W-SUN')
 '''
@@ -697,7 +697,7 @@ DatetimeIndex(['2016-10-02', '2016-10-16', '2016-10-30', '2016-11-13', '2016-11-
 使用日期和随机数
 '''
 df = pd.DataFrame( {'Count1 ':100+np.random.randint(-5, 10, 9).cumsum(), 'Count2':120+np.random.randint(-5, 10, 9)}, index=dates)
-print(df)
+#print(df)
 '''
 
             Count1   Count2
@@ -712,7 +712,7 @@ print(df)
 2017-01-22      123     115
 '''
 
-print(df.index.weekday_name)
+#print(df.index.weekday_name)
 '''
 Index(['Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday'], dtype='object')
 '''
@@ -720,7 +720,7 @@ Index(['Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday', 'Sunday', 'Su
 '''
 使用diff来查找每个日期值之间的差异
 '''
-print(df.diff())
+#print(df.diff())
 '''
             Count1   Count2
 2016-10-02      NaN     NaN
@@ -738,7 +738,7 @@ print(df.diff())
 '''
 如果想知道每个月的平均数
 '''
-print(df.resample('M').mean())
+#print(df.resample('M').mean())
 '''
             Count1       Count2
 2016-10-31    105.0  124.666667
@@ -747,3 +747,65 @@ print(df.resample('M').mean())
 2017-01-31    108.0  124.000000
 '''
 
+'''
+使用部分字符串索引来查询特定年份
+'''
+#print(df['2017'])
+'''
+            Count1   Count2
+2017-01-08      151     127
+2017-01-22      146     120
+'''
+
+'''
+使用部分字符串索引来查询特定月份
+'''
+#print(df['2016-12'])
+'''
+            Count1   Count2
+2016-12-11      111     123
+2016-12-25      111     120
+'''
+
+'''
+对时间进行切片
+'''
+print(df['2016-12':])
+'''
+            Count1   Count2
+2016-12-11      120     120
+2016-12-25      129     124
+2017-01-08      124     117
+2017-01-22      128     125
+'''
+
+'''
+可以在DataFrame中更改我们日期的频率，使用asfreq
+把之前的频率从每两周改为每周，我们每隔一周就会丢失值，所以我们队这些丢失的值使用正向填充ffill方法
+'''
+print(df.asfreq('W', method='ffill'))
+'''
+            Count1   Count2
+2016-10-02      109     122
+2016-10-09      109     122
+2016-10-16      113     125
+2016-10-23      113     125
+2016-10-30      114     115
+2016-11-06      114     115
+2016-11-13      112     127
+2016-11-20      112     127
+2016-11-27      107     122
+2016-12-04      107     122
+2016-12-11      114     121
+2016-12-18      114     121
+2016-12-25      119     117
+2017-01-01      119     117
+2017-01-08      119     116
+2017-01-15      119     116
+2017-01-22      115     119
+'''
+
+
+'''
+绘制时间序列
+'''
